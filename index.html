@@ -1,0 +1,117 @@
+                
+                btnMinus.disabled = false; btnPlus.disabled = false;
+                btnMinus.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnPlus.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                lucide.createIcons();
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(doTimerTick, 1000);
+            }
+        };
+        window.startIceWater = () => {
+            playClickSound();
+            document.getElementById('finish-overlay').classList.add('hidden');
+            document.getElementById('finish-overlay').classList.remove('flex');
+            document.getElementById('app-shell').classList.remove('alarm-state');
+            const alarmAudio = document.getElementById('alarm-audio');
+            alarmAudio.pause(); alarmAudio.currentTime = 0;
+            STATE.iceWaterMode = true;
+            STATE.timeLeft = 180;
+            STATE.totalTime = 180;
+            const boilingAudio = document.getElementById('boiling-audio');
+            boilingAudio.pause(); boilingAudio.currentTime = 0;
+            const iceAudio = document.getElementById('ice-water-audio');
+            iceAudio.volume = 0.5;
+            iceAudio.play().catch(e => console.log("冰水聲播放失敗", e));
+            document.getElementById('timer-status').innerText = '冰水冷卻中...';
+            document.getElementById('timer-status').classList.replace('text-yolk', 'text-blue-500');
+            document.getElementById('main-btn').innerHTML = '<i data-lucide="square" fill="currentColor"></i><span>停止</span>';
+            document.getElementById('main-btn').style.background = '#3B82F6'; 
+            
+            const btnMinus = document.getElementById('btn-minus');
+            const btnPlus = document.getElementById('btn-plus');
+            btnMinus.disabled = false; btnPlus.disabled = false;
+            btnMinus.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnPlus.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            updateTimerDisplay();
+            lucide.createIcons();
+            
+            STATE.running = true;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(doTimerTick, 1000);
+        };
+        window.resetApp = () => {
+            playClickSound(); 
+            const appShell = document.getElementById('app-shell');
+            appShell.classList.remove('alarm-state', 'alarm-state-blue');
+            
+            const finishOverlay = document.getElementById('finish-overlay');
+            finishOverlay.classList.add('hidden');
+            finishOverlay.classList.remove('flex');
+            
+            const alarmAudio = document.getElementById('alarm-audio');
+            const boilingAudio = document.getElementById('boiling-audio');
+            const iceAudio = document.getElementById('ice-water-audio');
+            const cdAudio = document.getElementById('countdown-audio');
+            alarmAudio.pause(); alarmAudio.currentTime = 0;
+            boilingAudio.pause(); boilingAudio.currentTime = 0;
+            iceAudio.pause(); iceAudio.currentTime = 0;
+            cdAudio.pause(); cdAudio.currentTime = 0;
+            
+            if (timerInterval) clearInterval(timerInterval);
+            
+            STATE.iceWaterMode = false;
+            STATE.running = false;
+            
+            document.getElementById('timer-status').classList.replace('text-blue-500', 'text-yolk');
+            finishOverlay.classList.replace('bg-blue-500/95', 'bg-yolk/95');
+            document.getElementById('btn-ice-water').classList.remove('hidden');
+            
+            document.getElementById('main-btn').innerHTML = '<i data-lucide="play" fill="currentColor"></i><span>開始煮</span>';
+            document.getElementById('main-btn').style.background = '';
+            
+            const btnMinus = document.getElementById('btn-minus');
+            const btnPlus = document.getElementById('btn-plus');
+            btnMinus.disabled = true; btnPlus.disabled = true;
+            btnMinus.classList.add('opacity-50', 'cursor-not-allowed');
+            btnPlus.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            updateCalculation(); 
+            lucide.createIcons();
+        };
+        window.handleTipClick = (recipeId, ytLink, fallbackId) => {
+            playClickSound();
+            if (recipeId === null && ytLink === null && fallbackId === null) return; 
+            if (recipeId && RECIPES.some(r => r.id === recipeId)) { openRecipeDetail(recipeId); } 
+            else if (ytLink && ytLink !== 'null') { window.open(ytLink, '_blank'); } 
+            else if (fallbackId && RECIPES.some(r => r.id === fallbackId)) { openRecipeDetail(fallbackId); } 
+            else { openRecipeCollection(); }
+        };
+        window.renderTips = (idx) => {
+            const container = document.getElementById('tips-panel');
+            if (!container) return; 
+            const d = DONENESS_DATA[idx];
+            const tips = d.tips;
+            container.innerHTML = `
+                <div class="p-2 rounded-3xl neu-flat bg-bg border border-shadow space-y-1">
+                    ${tips.map(tip => {
+                        const rId = tip.recipeId !== null ? tip.recipeId : 'null';
+                        const yLink = tip.ytLink ? "'" + tip.ytLink + "'" : 'null';
+                        const fId = tip.fallbackId !== null ? tip.fallbackId : 'null';
+                        return `
+                        <div onclick="handleTipClick(${rId}, ${yLink}, ${fId})" class="rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:brightness-95 active:scale-95 transition-all" style="background-color: ${d.tipBackgroundColor};">
+                            <div class="text-5xl shrink-0">${tip.emoji}</div>
+                            <div class="text-white text-xs font-semibold leading-relaxed flex-1">${tip.desc}</div>
+                            ${(tip.recipeId !== null || tip.ytLink || tip.fallbackId !== null) ? '<i data-lucide="chevron-right" class="w-5 h-5 text-white/50 shrink-0"></i>' : ''}
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            lucide.createIcons(); 
+        };
+        init();
+    </script>
+</body>
+</html>
